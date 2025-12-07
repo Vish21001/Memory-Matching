@@ -1,18 +1,37 @@
 const board = document.getElementById('game-board');
 const scoreDisplay = document.getElementById('score');
 const restartBtn = document.getElementById('restart');
+const startBtn = document.getElementById('start');
+const difficultySelect = document.getElementById('difficulty');
 
-let cards = ['🍎','🍌','🍇','🍓','🍎','🍌','🍇','🍓'];
+let cards = [];
 let firstCard = null;
 let secondCard = null;
 let lockBoard = false;
 let score = 0;
+let totalPairs = 0;
 
-// Shuffle cards
-cards.sort(() => 0.5 - Math.random());
+// Generate emojis for cards
+function generateCards(pairCount) {
+    const baseEmojis = ['🍎','🍌','🍇','🍓','🍍','🥝','🍒','🍑'];
+    const selected = baseEmojis.slice(0, pairCount);
+    let allCards = [...selected, ...selected]; // duplicate for pairs
+    allCards.sort(() => 0.5 - Math.random());
+    return allCards;
+}
 
-function createBoard() {
+// Set grid columns based on difficulty
+function setGrid(pairCount) {
+    const cols = Math.min(pairCount, 4); // max 4 columns
+    board.style.gridTemplateColumns = `repeat(${cols}, 80px)`;
+}
+
+// Create game board
+function createBoard(pairCount) {
     board.innerHTML = '';
+    cards = generateCards(pairCount);
+    totalPairs = pairCount;
+    setGrid(pairCount);
     cards.forEach((symbol) => {
         const card = document.createElement('div');
         card.classList.add('card');
@@ -22,6 +41,8 @@ function createBoard() {
     });
     score = 0;
     scoreDisplay.textContent = `Score: ${score}`;
+    [firstCard, secondCard] = [null, null];
+    lockBoard = false;
 }
 
 function flipCard() {
@@ -36,7 +57,6 @@ function flipCard() {
 
     secondCard = this;
     lockBoard = true;
-
     checkForMatch();
 }
 
@@ -45,7 +65,9 @@ function checkForMatch() {
         firstCard.classList.add('matched');
         secondCard.classList.add('matched');
         score += 10;
+        totalPairs--;
         resetBoard();
+        if(totalPairs === 0) alert(`You won! Final Score: ${score}`);
     } else {
         setTimeout(() => {
             firstCard.textContent = '';
@@ -61,6 +83,12 @@ function resetBoard() {
     lockBoard = false;
 }
 
-restartBtn.addEventListener('click', createBoard);
+startBtn.addEventListener('click', () => {
+    const difficulty = parseInt(difficultySelect.value);
+    createBoard(difficulty);
+});
 
-createBoard();
+restartBtn.addEventListener('click', () => {
+    const difficulty = parseInt(difficultySelect.value);
+    createBoard(difficulty);
+});
